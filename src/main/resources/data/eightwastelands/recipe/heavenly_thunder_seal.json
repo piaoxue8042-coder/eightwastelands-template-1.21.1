@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " L ",
+    "CPC",
+    "NNN"
+  ],
+  "key": {
+    "L": {
+      "item": "minecraft:lightning_rod"
+    },
+    "C": {
+      "item": "minecraft:copper_block"
+    },
+    "P": {
+      "item": "minecraft:creeper_head"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    }
+  },
+  "result": {
+    "id": "eightwastelands:heavenly_thunder_seal",
+    "count": 1
+  }
+}

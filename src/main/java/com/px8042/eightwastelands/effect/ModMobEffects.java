@@ -19,7 +19,7 @@ public class ModMobEffects {
 
     public static final DeferredHolder<MobEffect, MobEffect> EARTH_DISASTER =
             MOB_EFFECTS.register("earth_disaster",
-                    () -> new ModMobEffect(MobEffectCategory.HARMFUL, 0x8B7355));
+                    () -> new EarthDisasterEffect(MobEffectCategory.HARMFUL, 0x8B7355));
 
     public static final DeferredHolder<MobEffect, MobEffect> KARMA =
             MOB_EFFECTS.register("karma",

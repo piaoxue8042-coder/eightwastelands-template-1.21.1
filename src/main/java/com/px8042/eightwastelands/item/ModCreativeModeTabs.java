@@ -26,6 +26,10 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.SUMMER_FAN.get());
                                 output.accept(ModItems.SPRING_SHEARS.get());
                                 output.accept(ModItems.HEART_DEMON_MASK.get());
+                                output.accept(ModItems.GUIYUAN_BELL.get());
+                                output.accept(ModItems.BLOOD_SKULL.get());
+                                output.accept(ModItems.SHENG_ZHUANG.get());
+                                output.accept(ModItems.HEAVENLY_THUNDER_SEAL.get());
 
                                 //此处在创造物品栏里添加物品
                             })

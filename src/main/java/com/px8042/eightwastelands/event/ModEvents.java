@@ -1,5 +1,5 @@
 package com.px8042.eightwastelands.event;
-import com.px8042.eightwastelands.item.custom.NineHeavensPunishmentItem;
+import com.px8042.eightwastelands.item.custom.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -31,9 +31,16 @@ import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import com.px8042.eightwastelands.effect.ModMobEffects;
 import net.minecraft.world.entity.Entity;
-import com.px8042.eightwastelands.item.custom.SummerFanItem;
-import com.px8042.eightwastelands.item.custom.SpringShearsItem;
 import net.minecraft.world.entity.EntityType;
+
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import com.px8042.eightwastelands.damage.ModDamageTypes;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LightningBolt;
+
+import java.util.Comparator;
+
 
 
 
@@ -46,6 +53,7 @@ public class ModEvents {
             "eightwastelands_has_received_nine_heavens_punishment";  //添加首次获得标记
     private static final String SHOULD_RESTORE_NINE_HEAVENS_PUNISHMENT =
             "eightwastelands_should_restore_nine_heavens_punishment";  //用于制作死亡时不掉落
+    private static final float WITHERED_BLOOD_REVERSE_MAX_HEALTH = 100.0F;//用于反转绝灵,到达血量即可反转
 
 
 
@@ -62,12 +70,25 @@ public class ModEvents {
             return;
         }
 
+        resetHeavenlyThunderSealCountOnDeath(player);
+
         if (hasNineHeavensPunishment(player)) {
             player.getPersistentData().putBoolean(
                     SHOULD_RESTORE_NINE_HEAVENS_PUNISHMENT,
                     true
             );
         }
+    }
+    //重新计算天劫的雷次数
+    private void resetHeavenlyThunderSealCountOnDeath(Player player) {
+
+        if (NineHeavensPunishmentItem.isHeavenlyTribulationReversed(player)) {
+            return;
+        }
+
+        CompoundTag data = player.getPersistentData();
+
+        data.remove(HeavenlyThunderSealItem.HEAVENLY_THUNDER_COUNT);
     }
     //玩家重生事件
     @SubscribeEvent
@@ -125,6 +146,8 @@ public class ModEvents {
         return found[0];
     }
     //修复死亡后消失
+    // 修复死亡后数据丢失
+    // 修复死亡后数据丢失
     @SubscribeEvent
     public void onPlayerClone(PlayerEvent.Clone event) {
 
@@ -144,6 +167,32 @@ public class ModEvents {
 
         if (oldData.getBoolean(HAS_RECEIVED_NINE_HEAVENS_PUNISHMENT)) {
             newData.putBoolean(HAS_RECEIVED_NINE_HEAVENS_PUNISHMENT, true);
+        }
+
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.LUCK_DEPRIVATION_REVERSED);
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.WIND_EVIL_REVERSED);
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.LIFE_EXHAUSTION_REVERSED);
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.HEART_DEMON_REVERSED);
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.SPIRIT_EXHAUSTION_REVERSED);
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.WITHERED_BLOOD_REVERSED);
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.KARMA_REVERSED);
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.EARTH_DISASTER_REVERSED);
+        copyBooleanFlag(oldData, newData, NineHeavensPunishmentItem.HEAVENLY_TRIBULATION_REVERSED);
+
+        if (oldData.contains(BloodSkullItem.VILLAGER_KILL_COUNT)) {
+            newData.putInt(
+                    BloodSkullItem.VILLAGER_KILL_COUNT,
+                    oldData.getInt(BloodSkullItem.VILLAGER_KILL_COUNT)
+            );
+        }
+
+
+
+        if (oldData.contains(HeavenlyThunderSealItem.NEXT_THUNDER_STRIKE_TIME)) {
+            newData.putLong(
+                    HeavenlyThunderSealItem.NEXT_THUNDER_STRIKE_TIME,
+                    oldData.getLong(HeavenlyThunderSealItem.NEXT_THUNDER_STRIKE_TIME)
+            );
         }
     }
     private void ensureNineHeavensPunishment(Player player) {
@@ -208,6 +257,81 @@ public class ModEvents {
 
         return found[0];
     }
+    //反转因果
+    @SubscribeEvent
+    public void onVillagerKilledByBloodSkull(LivingDeathEvent event) {
+
+        if (event.getEntity().level().isClientSide()) {
+            return;
+        }
+
+        if (event.getEntity().getType() != EntityType.VILLAGER) {
+            return;
+        }
+
+        if (!(event.getSource().getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (!hasBloodSkullEquipped(player)) {
+            return;
+        }
+
+        if (NineHeavensPunishmentItem.isKarmaReversed(player)) {
+            return;
+        }
+
+        CompoundTag data = player.getPersistentData();
+
+        int currentCount = data.getInt(BloodSkullItem.VILLAGER_KILL_COUNT);
+        int newCount = currentCount + 1;
+
+        data.putInt(BloodSkullItem.VILLAGER_KILL_COUNT, newCount);
+
+        player.displayClientMessage(
+                Component.literal("血颅骨：" + newCount + " / " + BloodSkullItem.REQUIRED_VILLAGER_KILLS),
+                true
+        );
+
+        if (newCount < BloodSkullItem.REQUIRED_VILLAGER_KILLS) {
+            return;
+        }
+
+        data.putBoolean(
+                NineHeavensPunishmentItem.KARMA_REVERSED,
+                true
+        );
+
+        player.removeEffect(ModMobEffects.KARMA);
+
+        player.displayClientMessage(
+                Component.literal("因果已反转：血债已满，因果归寂。"),
+                true
+        );
+    }
+    //检测血颅骨佩戴
+    private boolean hasBloodSkullEquipped(Player player) {
+
+        final boolean[] found = {false};
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler("calamity").ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    if (stacks.getStackInSlot(slot).is(ModItems.BLOOD_SKULL.get())) {
+                        found[0] = true;
+                        return;
+                    }
+                }
+            });
+        });
+
+        return found[0];
+    }
+
 
 
 
@@ -348,7 +472,9 @@ public class ModEvents {
     @SubscribeEvent
     public void onLivingDamage(Pre event) {
 
+        applyHeavenlyThunderSeal(event);
         applySummerFanShield(event);
+        applyHeartDemonMaskBacklash(event);
         applySpringShearsFateCut(event);
         applyHeartDemon(event);
         applySpiritExhaustion(event);
@@ -533,9 +659,43 @@ public class ModEvents {
 
         return found[0];
     }
+    // 心魔面具：受到攻击时，让攻击者反胃
+    private void applyHeartDemonMaskBacklash(Pre event) {
+
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        if (!hasHeartDemonMaskEquipped(player)) {
+            return;
+        }
+
+        if (!(event.getSource().getEntity() instanceof LivingEntity attacker)) {
+            return;
+        }
+
+        if (attacker == player) {
+            return;
+        }
+
+        attacker.addEffect(new MobEffectInstance(
+                MobEffects.CONFUSION,
+                5 * 20,
+                0,
+                false,
+                false,
+                true
+        ));
+    }
+
 
 
     //=============================================================================
+    //tick
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Post event) {
 
@@ -548,8 +708,311 @@ public class ModEvents {
         removeLifeExhaustionIfInactive(player);
         removeWindEvilIfInactive(player);
 
+        tickShengZhuangKnockbackResistance(player);
+        tickHeavenlyThunderSealStrike(player);
+
+        tryReverseWitheredBlood(player);
+        tryReverseEarthDisaster(player);
+
         ensureNineHeavensPunishment(player);
     }
+    //天雷效果
+    private void applyHeavenlyThunderSeal(Pre event) {
+
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        if (!hasHeavenlyThunderSealEquipped(player)) {
+            return;
+        }
+
+        if (!event.getSource().is(DamageTypeTags.IS_LIGHTNING)) {
+            return;
+        }
+
+        if (NineHeavensPunishmentItem.isHeavenlyTribulationReversed(player)) {
+            event.setNewDamage(0.0F);
+            return;
+        }
+
+        if (!event.getSource().is(ModDamageTypes.HEAVENLY_TRIBULATION_LIGHTNING)) {
+            return;
+        }
+
+        if (!player.hasEffect(ModMobEffects.HEAVENLY_TRIBULATION)) {
+            return;
+        }
+
+        if (player.getHealth() - event.getNewDamage() <= 0.0F) {
+            return;
+        }
+
+        CompoundTag data = player.getPersistentData();
+
+        int oldCount = data.getInt(HeavenlyThunderSealItem.HEAVENLY_THUNDER_COUNT);
+        int newCount = oldCount + 1;
+
+        data.putInt(HeavenlyThunderSealItem.HEAVENLY_THUNDER_COUNT, newCount);
+
+        player.displayClientMessage(
+                Component.literal("天雷印：" + newCount + " / "
+                        + HeavenlyThunderSealItem.REQUIRED_THUNDER_COUNT),
+                true
+        );
+
+        if (newCount < HeavenlyThunderSealItem.REQUIRED_THUNDER_COUNT) {
+            return;
+        }
+
+        data.putBoolean(
+                NineHeavensPunishmentItem.HEAVENLY_TRIBULATION_REVERSED,
+                true
+        );
+
+        player.removeEffect(ModMobEffects.HEAVENLY_TRIBULATION);
+
+        player.displayClientMessage(
+                Component.literal("天劫已反转：九雷归印，天罚已寂。"),
+                true
+        );
+    }
+    private void tickHeavenlyThunderSealStrike(Player player) {
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        if (!hasHeavenlyThunderSealEquipped(player)) {
+            return;
+        }
+
+        if (!NineHeavensPunishmentItem.isHeavenlyTribulationReversed(player)) {
+            return;
+        }
+
+        long currentTime = level.getGameTime();
+
+        long nextStrikeTime = player.getPersistentData().getLong(
+                HeavenlyThunderSealItem.NEXT_THUNDER_STRIKE_TIME
+        );
+
+        if (currentTime < nextStrikeTime) {
+            return;
+        }
+
+        LivingEntity target = findHeavenlyThunderSealTarget(player);
+
+        if (target == null) {
+            return;
+        }
+
+        summonHeavenlyThunderSealVisualLightning(level, target);
+
+        target.hurt(
+                level.damageSources().source(
+                        ModDamageTypes.HEAVENLY_THUNDER_SEAL_LIGHTNING,
+                        player
+                ),
+                HeavenlyThunderSealItem.THUNDER_STRIKE_DAMAGE
+        );
+
+        player.getPersistentData().putLong(
+                HeavenlyThunderSealItem.NEXT_THUNDER_STRIKE_TIME,
+                currentTime + HeavenlyThunderSealItem.THUNDER_STRIKE_COOLDOWN
+        );
+    }
+    private LivingEntity findHeavenlyThunderSealTarget(Player player) {
+
+        AABB range = player.getBoundingBox().inflate(
+                HeavenlyThunderSealItem.THUNDER_STRIKE_RANGE
+        );
+
+        return player.level().getEntitiesOfClass(
+                        LivingEntity.class,
+                        range,
+                        entity -> entity.isAlive()
+                                && !(entity instanceof Player)
+                                && entity != player
+                )
+                .stream()
+                .min(Comparator.comparingDouble(player::distanceToSqr))
+                .orElse(null);
+    }
+    private void summonHeavenlyThunderSealVisualLightning(ServerLevel level, LivingEntity target) {
+
+        LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
+
+        if (lightning == null) {
+            return;
+        }
+
+        lightning.moveTo(
+                target.getX(),
+                target.getY(),
+                target.getZ()
+        );
+
+        lightning.setVisualOnly(true);
+
+        level.addFreshEntity(lightning);
+    }
+    private boolean hasHeavenlyThunderSealEquipped(Player player) {
+
+        final boolean[] found = {false};
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler("calamity").ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    if (stacks.getStackInSlot(slot).is(ModItems.HEAVENLY_THUNDER_SEAL.get())) {
+                        found[0] = true;
+                        return;
+                    }
+                }
+            });
+        });
+
+        return found[0];
+    }
+    //生桩效果
+    private void tickShengZhuangKnockbackResistance(Player player) {
+
+        if (hasShengZhuangEquipped(player)) {
+            applyShengZhuangKnockbackResistance(player);
+        } else {
+            removeShengZhuangKnockbackResistance(player);
+        }
+    }
+    private void applyShengZhuangKnockbackResistance(Player player) {
+
+        AttributeInstance knockbackResistance = player.getAttribute(
+                Attributes.KNOCKBACK_RESISTANCE
+        );
+
+        if (knockbackResistance == null) {
+            return;
+        }
+
+        if (knockbackResistance.getModifier(
+                ShengZhuangItem.KNOCKBACK_RESISTANCE_MODIFIER_ID
+        ) != null) {
+            return;
+        }
+
+        knockbackResistance.addTransientModifier(new AttributeModifier(
+                ShengZhuangItem.KNOCKBACK_RESISTANCE_MODIFIER_ID,
+                ShengZhuangItem.KNOCKBACK_RESISTANCE_BONUS,
+                AttributeModifier.Operation.ADD_VALUE
+        ));
+    }
+    private void removeShengZhuangKnockbackResistance(Player player) {
+
+        AttributeInstance knockbackResistance = player.getAttribute(
+                Attributes.KNOCKBACK_RESISTANCE
+        );
+
+        if (knockbackResistance == null) {
+            return;
+        }
+
+        if (knockbackResistance.getModifier(
+                ShengZhuangItem.KNOCKBACK_RESISTANCE_MODIFIER_ID
+        ) != null) {
+            knockbackResistance.removeModifier(
+                    ShengZhuangItem.KNOCKBACK_RESISTANCE_MODIFIER_ID
+            );
+        }
+    }
+
+    //反转地灾
+    private void tryReverseEarthDisaster(Player player) {
+
+        if (NineHeavensPunishmentItem.isEarthDisasterReversed(player)) {
+            return;
+        }
+
+        if (!hasShengZhuangEquipped(player)) {
+            return;
+        }
+
+        if (player.level().dimension() != Level.NETHER) {
+            return;
+        }
+
+        if (player.getBlockY() < 129) {
+            return;
+        }
+
+        player.getPersistentData().putBoolean(
+                NineHeavensPunishmentItem.EARTH_DISASTER_REVERSED,
+                true
+        );
+
+        player.removeEffect(ModMobEffects.EARTH_DISASTER);
+
+        player.displayClientMessage(
+                Component.literal("地灾已反转：立桩镇地，地缚已断。"),
+                true
+        );
+    }
+
+    private boolean hasShengZhuangEquipped(Player player) {
+
+        final boolean[] found = {false};
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler("calamity").ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    if (stacks.getStackInSlot(slot).is(ModItems.SHENG_ZHUANG.get())) {
+                        found[0] = true;
+                        return;
+                    }
+                }
+            });
+        });
+
+        return found[0];
+    }
+    //反转枯血
+    private void tryReverseWitheredBlood(Player player) {
+
+        if (NineHeavensPunishmentItem.isWitheredBloodReversed(player)) {
+            return;
+        }
+
+        if (player.getMaxHealth() < WITHERED_BLOOD_REVERSE_MAX_HEALTH) {
+            return;
+        }
+
+        player.getPersistentData().putBoolean(
+                NineHeavensPunishmentItem.WITHERED_BLOOD_REVERSED,
+                true
+        );
+
+        player.removeEffect(ModMobEffects.WITHERED_BLOOD);
+
+        player.displayClientMessage(
+                Component.literal("枯血已反转：气血充盈，生机复苏。"),
+                true
+        );
+    }
+
     private void applySpiritExhaustion(Pre event) {
 
         if (!(event.getSource().getEntity() instanceof Player player)) {
@@ -572,6 +1035,10 @@ public class ModEvents {
             return;
         }
 
+        if (NineHeavensPunishmentItem.isHeartDemonReversed(player)) {
+            return;
+        }
+
         if (!player.hasEffect(ModMobEffects.HEART_DEMON)) {
             return;
         }
@@ -584,6 +1051,12 @@ public class ModEvents {
                 false,
                 true
         ));
+    }
+    private void copyBooleanFlag(CompoundTag oldData, CompoundTag newData, String key) {
+
+        if (oldData.getBoolean(key)) {
+            newData.putBoolean(key, true);
+        }
     }
     @SubscribeEvent
     public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {

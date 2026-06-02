@@ -18,6 +18,9 @@ import com.px8042.eightwastelands.eightwastelands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.TooltipFlag;
 import com.px8042.eightwastelands.effect.ModMobEffects;
+import com.px8042.eightwastelands.damage.ModDamageTypes;
+import com.px8042.eightwastelands.item.ModItems;
+import top.theillusivec4.curios.api.CuriosApi;
 import java.util.List;
 
 
@@ -37,8 +40,7 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
 
 
 
-    private static final int SLOWNESS_DURATION = 40;
-    private static final int SLOWNESS_AMPLIFIER = 1;
+
 
 
     private static final int MINING_FATIGUE_DURATION = 40;
@@ -84,6 +86,21 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
             "eightwastelands_reversed_life_exhaustion";
     public static final String HEART_DEMON_REVERSED =
             "eightwastelands_reversed_heart_demon";
+    public static final String SPIRIT_EXHAUSTION_REVERSED =
+            "eightwastelands_reversed_spirit_exhaustion";
+    public static final String WITHERED_BLOOD_REVERSED =
+            "eightwastelands_reversed_withered_blood";
+    public static final String KARMA_REVERSED =
+            "eightwastelands_reversed_karma";
+    public static final String EARTH_DISASTER_REVERSED =
+            "eightwastelands_reversed_earth_disaster";
+    public static final String HEAVENLY_TRIBULATION_REVERSED =
+            "eightwastelands_reversed_heavenly_tribulation";
+    private static final int THUNDER_SEAL_LIGHTNING_DELAY = 2 * 20;
+    private static final float THUNDER_SEAL_LIGHTNING_DAMAGE = 100.0F;  //渡劫时所用的雷的伤害
+
+
+
 
 
     //下面是方法
@@ -105,6 +122,28 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
     public static boolean isHeartDemonReversed(Player player) {
         return player.getPersistentData().getBoolean(HEART_DEMON_REVERSED);
     }
+    //绝灵
+    public static boolean isSpiritExhaustionReversed(Player player) {
+        return player.getPersistentData().getBoolean(SPIRIT_EXHAUSTION_REVERSED);
+    }
+    //枯血
+    public static boolean isWitheredBloodReversed(Player player) {
+        return player.getPersistentData().getBoolean(WITHERED_BLOOD_REVERSED);
+    }
+    // 因果
+    public static boolean isKarmaReversed(Player player) {
+        return player.getPersistentData().getBoolean(KARMA_REVERSED);
+    }
+    // 地灾
+    public static boolean isEarthDisasterReversed(Player player) {
+        return player.getPersistentData().getBoolean(EARTH_DISASTER_REVERSED);
+    }
+    //天劫
+    // 天劫
+    public static boolean isHeavenlyTribulationReversed(Player player) {
+        return player.getPersistentData().getBoolean(HEAVENLY_TRIBULATION_REVERSED);
+    }
+
 
 
     public NineHeavensPunishmentItem(Properties properties) {
@@ -131,32 +170,44 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
             return;
         }
 
-        player.addEffect(new MobEffectInstance(
-                ModMobEffects.HEAVENLY_TRIBULATION,
-                TRIBULATION_EFFECT_DURATION,
-                0,
-                false,
-                false,
-                true
-        ));
+        if (!isHeavenlyTribulationReversed(player)) {
+            player.addEffect(new MobEffectInstance(
+                    ModMobEffects.HEAVENLY_TRIBULATION,
+                    TRIBULATION_EFFECT_DURATION,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+        } else {
+            player.removeEffect(ModMobEffects.HEAVENLY_TRIBULATION);
+        }
 
-        player.addEffect(new MobEffectInstance(
-                ModMobEffects.EARTH_DISASTER,
-                TRIBULATION_EFFECT_DURATION,
-                0,
-                false,
-                false,
-                true
-        ));
+        if (!isEarthDisasterReversed(player)) {
+            player.addEffect(new MobEffectInstance(
+                    ModMobEffects.EARTH_DISASTER,
+                    TRIBULATION_EFFECT_DURATION,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+        } else {
+            player.removeEffect(ModMobEffects.EARTH_DISASTER);
+        }
 
-        player.addEffect(new MobEffectInstance(
-                ModMobEffects.KARMA,
-                TRIBULATION_EFFECT_DURATION,
-                0,
-                false,
-                false,
-                true
-        ));
+        if (!isKarmaReversed(player)) {
+            player.addEffect(new MobEffectInstance(
+                    ModMobEffects.KARMA,
+                    TRIBULATION_EFFECT_DURATION,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+        } else {
+            player.removeEffect(ModMobEffects.KARMA);
+        }
 
         if (!isHeartDemonReversed(player)) {
             player.addEffect(new MobEffectInstance(
@@ -171,23 +222,32 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
             player.removeEffect(ModMobEffects.HEART_DEMON);
         }
 
-        player.addEffect(new MobEffectInstance(
-                ModMobEffects.SPIRIT_EXHAUSTION,
-                TRIBULATION_EFFECT_DURATION,
-                0,
-                false,
-                false,
-                true
-        ));
+        if (!isSpiritExhaustionReversed(player)) {
+            player.addEffect(new MobEffectInstance(
+                    ModMobEffects.SPIRIT_EXHAUSTION,
+                    TRIBULATION_EFFECT_DURATION,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+        } else {
+            player.removeEffect(ModMobEffects.SPIRIT_EXHAUSTION);
+            player.removeEffect(MobEffects.DIG_SLOWDOWN);
+        }
 
-        player.addEffect(new MobEffectInstance(
-                ModMobEffects.WITHERED_BLOOD,
-                TRIBULATION_EFFECT_DURATION,
-                0,
-                false,
-                false,
-                true
-        ));
+        if (!isWitheredBloodReversed(player)) {
+            player.addEffect(new MobEffectInstance(
+                    ModMobEffects.WITHERED_BLOOD,
+                    TRIBULATION_EFFECT_DURATION,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+        } else {
+            player.removeEffect(ModMobEffects.WITHERED_BLOOD);
+        }
 
         if (!isLuckDeprivationReversed(player)) {
             player.addEffect(new MobEffectInstance(
@@ -257,9 +317,7 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
         if (player.hasEffect(ModMobEffects.HEAVENLY_TRIBULATION)) {
             tickHeavenlyTribulation(player, level);
         }
-        if (player.hasEffect(ModMobEffects.EARTH_DISASTER)) {
-            tickEarthDisaster(player);
-        }
+
 
         if (player.hasEffect(ModMobEffects.SPIRIT_EXHAUSTION)) {
             tickSpiritExhaustion(player);
@@ -360,19 +418,31 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
 
         level.addFreshEntity(lightning);
 
-        damagePlayerByHalfMaxHealth(player, level);
+        damagePlayerByHeavenlyTribulation(player, level);
     }
-    private void damagePlayerByHalfMaxHealth(Player player, ServerLevel level) {
+    private void damagePlayerByHeavenlyTribulation(Player player, ServerLevel level) {
 
-        float damage = player.getMaxHealth() * LIGHTNING_DAMAGE_MAX_HEALTH_RATIO;
+        float damage;
+
+        if (hasHeavenlyThunderSealEquipped(player)
+                && !isHeavenlyTribulationReversed(player)) {
+            damage = THUNDER_SEAL_LIGHTNING_DAMAGE;
+        } else {
+            damage = player.getMaxHealth() * LIGHTNING_DAMAGE_MAX_HEALTH_RATIO;
+        }
 
         player.hurt(
-                level.damageSources().lightningBolt(),
+                level.damageSources().source(ModDamageTypes.HEAVENLY_TRIBULATION_LIGHTNING),
                 damage
         );
     }
 
-    private int getNextLightningDelay(ServerLevel level) {
+    private int getNextLightningDelay(ServerLevel level, Player player) {
+
+        if (hasHeavenlyThunderSealEquipped(player)
+                && !isHeavenlyTribulationReversed(player)) {
+            return THUNDER_SEAL_LIGHTNING_DELAY;
+        }
 
         if (isHardcore(level)) {
             return HARDCORE_LIGHTNING_DELAY;
@@ -387,17 +457,7 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
     }
 
     //tick方法
-    private void tickEarthDisaster(Player player) {
 
-        player.addEffect(new MobEffectInstance(
-                MobEffects.MOVEMENT_SLOWDOWN,
-                SLOWNESS_DURATION,
-                SLOWNESS_AMPLIFIER,
-                false,
-                false,
-                true
-        ));
-    }
     private void tickSpiritExhaustion(Player player) {
 
         player.addEffect(new MobEffectInstance(
@@ -436,12 +496,23 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
         CompoundTag data = player.getPersistentData();
         long gameTime = level.getGameTime();
 
+        int nextDelay = getNextLightningDelay(level, player);
+
         if (!data.contains(NEXT_LIGHTNING_TIME)) {
-            data.putLong(NEXT_LIGHTNING_TIME, gameTime + getNextLightningDelay(level));
+            data.putLong(NEXT_LIGHTNING_TIME, gameTime + nextDelay);
             return;
         }
 
         long nextLightningTime = data.getLong(NEXT_LIGHTNING_TIME);
+
+        // 戴上天雷印后，如果原本随机雷还要等很久，就立刻压缩到 2 秒内
+        if (hasHeavenlyThunderSealEquipped(player)
+                && !isHeavenlyTribulationReversed(player)
+                && nextLightningTime - gameTime > THUNDER_SEAL_LIGHTNING_DELAY) {
+
+            data.putLong(NEXT_LIGHTNING_TIME, gameTime + THUNDER_SEAL_LIGHTNING_DELAY);
+            return;
+        }
 
         if (gameTime < nextLightningTime) {
             return;
@@ -451,8 +522,30 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
             summonLightningOnPlayer(player, level);
         }
 
-        data.putLong(NEXT_LIGHTNING_TIME, gameTime + getNextLightningDelay(level));
+        data.putLong(NEXT_LIGHTNING_TIME, gameTime + getNextLightningDelay(level, player));
     }
+    private boolean hasHeavenlyThunderSealEquipped(Player player) {
+
+        final boolean[] found = {false};
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler("calamity").ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    if (stacks.getStackInSlot(slot).is(ModItems.HEAVENLY_THUNDER_SEAL.get())) {
+                        found[0] = true;
+                        return;
+                    }
+                }
+            });
+        });
+
+        return found[0];
+    }
+    //风煞
     private void tickWindEvil(Player player) {
 
         AttributeInstance armor = player.getAttribute(Attributes.ARMOR);
