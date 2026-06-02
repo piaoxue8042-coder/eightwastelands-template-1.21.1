@@ -1,0 +1,38 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GDB",
+    "AEA",
+    "LFS"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_block"
+    },
+    "D": {
+      "item": "minecraft:dragon_breath"
+    },
+    "B": {
+      "item": "minecraft:diamond_block"
+    },
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "E": {
+      "item": "minecraft:emerald_block"
+    },
+    "L": {
+      "item": "minecraft:glowstone"
+    },
+    "F": {
+      "item": "minecraft:enchanted_book"
+    },
+    "S": {
+      "item": "minecraft:quartz_block"
+    }
+  },
+  "result": {
+    "id": "eightwastelands:wealth",
+    "count": 1
+  }
+}

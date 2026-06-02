@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EDE",
+    "HCB",
+    "ESE"
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:elytra"
+    },
+    "D": {
+      "item": "minecraft:dragon_egg"
+    },
+    "H": {
+      "item": "minecraft:dragon_head"
+    },
+    "C": {
+      "item": "minecraft:ender_chest"
+    },
+    "B": {
+      "item": "minecraft:dragon_breath"
+    },
+    "S": {
+      "item": "minecraft:shears"
+    }
+  },
+  "result": {
+    "id": "eightwastelands:spring_shears",
+    "count": 1
+  }
+}

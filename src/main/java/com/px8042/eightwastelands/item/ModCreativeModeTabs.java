@@ -1,0 +1,38 @@
+package com.px8042.eightwastelands.item;
+
+import com.px8042.eightwastelands.eightwastelands;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.function.Supplier;
+
+public class ModCreativeModeTabs {
+
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, eightwastelands.MOD_ID);
+
+    public static final Supplier<CreativeModeTab> EIGHT_WASTELANDS_TAB =
+            CREATIVE_MODE_TABS.register("eight_wastelands_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.NINE_HEAVENS_PUNISHMENT.get()))
+                            .title(Component.translatable("creativetab.eightwastelands.eight_wastelands"))
+                            .displayItems((parameters, output) -> {
+                                output.accept(ModItems.NINE_HEAVENS_PUNISHMENT.get());
+                                output.accept(ModItems.WEALTH.get());
+                                output.accept(ModItems.SUMMER_FAN.get());
+                                output.accept(ModItems.SPRING_SHEARS.get());
+                                output.accept(ModItems.HEART_DEMON_MASK.get());
+
+                                //此处在创造物品栏里添加物品
+                            })
+                            .build()
+            );
+
+    public static void register(IEventBus eventBus) {
+        CREATIVE_MODE_TABS.register(eventBus);
+    }
+}
