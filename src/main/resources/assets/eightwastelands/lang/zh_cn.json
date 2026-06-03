@@ -64,5 +64,7 @@
   "tooltip.eightwastelands.heavenly_thunder_seal.effect_2": "承受 9 次天劫雷击后仍然存活，即可反转天劫。",
   "tooltip.eightwastelands.heavenly_thunder_seal.effect_3": "天雷印：天劫反转后，佩戴时免疫雷电伤害。",
   "tooltip.eightwastelands.heavenly_thunder_seal.effect_4": "雷罚：天劫反转后，每 10 秒对 30 格内的敌人降下一道雷电，造成 100 点雷电伤害。",
-  "tooltip.eightwastelands.heavenly_thunder_seal.curse": "灾劫饰品：只能佩戴在灾劫槽位。"
+  "tooltip.eightwastelands.heavenly_thunder_seal.curse": "灾劫饰品：只能佩戴在灾劫槽位。",
+  "curios.identifier.xianqi": "仙器",
+  "curios.identifier.guiqi": "鬼器"
 }
