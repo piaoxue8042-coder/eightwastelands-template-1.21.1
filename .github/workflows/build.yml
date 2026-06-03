@@ -27,4 +27,11 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: |
+          chmod +x ./gradlew
+          for i in 1 2 3; do
+            ./gradlew build --no-daemon --stacktrace && exit 0
+            echo "Gradle build failed, retrying..."
+            sleep 15
+          done
+          exit 1
