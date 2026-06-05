@@ -78,5 +78,6 @@
   "tooltip.eightwastelands.jiehui_ring.effect_1": "劫灰护命：受到致命伤害时保留 1 点生命。",
   "tooltip.eightwastelands.jiehui_ring.effect_2": "触发后获得短暂抗性提升、防火与缓慢，并进入 2 分钟冷却。",
   "tooltip.eightwastelands.jiehui_ring.effect_3": "仙器：耐久耗尽时失效，需要在楼砧上修复。",
-  "tooltip.eightwastelands.jiehui_ring.curse": "仙器饰品：只能佩戴在仙器槽位。"
+  "tooltip.eightwastelands.jiehui_ring.curse": "仙器饰品：只能佩戴在仙器槽位。",
+  "block.eightwastelands.lou_zhen": "楼砧"
 }

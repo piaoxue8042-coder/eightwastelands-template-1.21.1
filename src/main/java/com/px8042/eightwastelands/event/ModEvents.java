@@ -51,6 +51,9 @@ import java.util.HashSet;
 import java.util.Set;
 import com.px8042.eightwastelands.item.artifact.ArtifactDurabilityHelper;
 import com.px8042.eightwastelands.item.artifact.IHeavenlyArtifactItem;
+import com.px8042.eightwastelands.block.ModBlocks;
+import com.px8042.eightwastelands.item.artifact.IHeavenlyArtifactItem;
+import com.px8042.eightwastelands.item.artifact.ArtifactDurabilityHelper;
 
 import java.util.Comparator;
 
@@ -67,10 +70,112 @@ public class ModEvents {
     private static final String SHOULD_RESTORE_NINE_HEAVENS_PUNISHMENT =
             "eightwastelands_should_restore_nine_heavens_punishment";  //用于制作死亡时不掉落
     private static final float WITHERED_BLOOD_REVERSE_MAX_HEALTH = 100.0F;//用于反转绝灵,到达血量即可反转
+    private static final int LOU_ZHEN_REPAIR_AMOUNT = 100;
+    private static final int LOU_ZHEN_REPAIR_LEVEL_COST = 3;  //楼砧常量
 
 
 
     //上面是常量
+    //右键楼砧事件
+    @SubscribeEvent
+    public void onLouZhenRepair(PlayerInteractEvent.RightClickBlock event) {
+
+        Player player = event.getEntity();
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        if (!event.getLevel().getBlockState(event.getPos()).is(ModBlocks.LOU_ZHEN.get())) {
+            return;
+        }
+
+        if (!player.isShiftKeyDown()) {
+            return;
+        }
+
+        ItemStack stack = player.getItemInHand(event.getHand());
+
+        if (!(stack.getItem() instanceof IHeavenlyArtifactItem)) {
+            return;
+        }
+
+        event.setCanceled(true);
+
+        if (!ArtifactDurabilityHelper.isDamaged(stack)) {
+            player.displayClientMessage(
+                    Component.literal("楼砧：这件仙器无需修复。"),
+                    true
+            );
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            return;
+        }
+
+        if (!player.isCreative()) {
+
+            if (!hasEmerald(player)) {
+                player.displayClientMessage(
+                        Component.literal("楼砧：修复仙器需要 1 个绿宝石。"),
+                        true
+                );
+                event.setCancellationResult(InteractionResult.FAIL);
+                return;
+            }
+
+            if (player.experienceLevel < LOU_ZHEN_REPAIR_LEVEL_COST) {
+                player.displayClientMessage(
+                        Component.literal("楼砧：修复仙器需要 " + LOU_ZHEN_REPAIR_LEVEL_COST + " 级经验。"),
+                        true
+                );
+                event.setCancellationResult(InteractionResult.FAIL);
+                return;
+            }
+
+            consumeEmerald(player);
+            player.giveExperienceLevels(-LOU_ZHEN_REPAIR_LEVEL_COST);
+        }
+
+        ArtifactDurabilityHelper.repairArtifact(
+                stack,
+                LOU_ZHEN_REPAIR_AMOUNT
+        );
+
+        player.displayClientMessage(
+                Component.literal("楼砧：仙器灵纹已修复。"),
+                true
+        );
+
+        event.setCancellationResult(InteractionResult.SUCCESS);
+    }
+    //楼砧绿宝石检测
+    private boolean hasEmerald(Player player) {
+
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+
+            ItemStack stack = player.getInventory().getItem(slot);
+
+            if (stack.is(Items.EMERALD)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    private void consumeEmerald(Player player) {
+
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+
+            ItemStack stack = player.getInventory().getItem(slot);
+
+            if (!stack.is(Items.EMERALD)) {
+                continue;
+            }
+
+            stack.shrink(1);
+            return;
+        }
+    }
+
     //下面是死亡时九重天罚不掉落事件
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {

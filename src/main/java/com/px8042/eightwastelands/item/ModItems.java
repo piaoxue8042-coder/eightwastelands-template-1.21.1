@@ -3,9 +3,16 @@ package com.px8042.eightwastelands.item;
 import com.px8042.eightwastelands.eightwastelands;
 import com.px8042.eightwastelands.item.custom.*;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.DeferredRegister;import com.px8042.eightwastelands.block.ModBlocks;
+import net.minecraft.world.item.BlockItem;
+
+import static com.px8042.eightwastelands.block.ModBlocks.BLOCKS;
 
 
 public class ModItems {
@@ -88,6 +95,13 @@ public class ModItems {
                             new Item.Properties()
                                     .stacksTo(1)
                                     .durability(500)
+                    ));
+    // 楼砧
+    public static final DeferredItem<Item> LOU_ZHEN =
+            ITEMS.register("lou_zhen",
+                    () -> new BlockItem(
+                            ModBlocks.LOU_ZHEN.get(),
+                            new Item.Properties()
                     ));
 
     //此处添加新物品

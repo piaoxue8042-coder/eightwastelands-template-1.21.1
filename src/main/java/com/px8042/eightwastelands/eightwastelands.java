@@ -1,4 +1,5 @@
 package com.px8042.eightwastelands;
+import com.px8042.eightwastelands.block.ModBlocks;
 import com.px8042.eightwastelands.event.ModEvents;
 import com.px8042.eightwastelands.item.ModItems;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class eightwastelands {
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
     public eightwastelands(IEventBus modEventBus, ModContainer modContainer) {
         // Register the commonSetup method for modloading
+        ModBlocks.register(modEventBus);
         ModItems.register(modEventBus);
         ModMobEffects.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
