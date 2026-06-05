@@ -38,6 +38,19 @@ import com.px8042.eightwastelands.damage.ModDamageTypes;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LightningBolt;
+import com.px8042.eightwastelands.item.artifact.ArtifactDurabilityHelper;
+import com.px8042.eightwastelands.item.artifact.IGhostArtifactItem;
+import com.px8042.eightwastelands.item.artifact.ArtifactDurabilityHelper;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import com.px8042.eightwastelands.item.artifact.ArtifactDurabilityHelper;
+import com.px8042.eightwastelands.item.artifact.IHeavenlyArtifactItem;
 
 import java.util.Comparator;
 
@@ -71,6 +84,7 @@ public class ModEvents {
         }
 
         resetHeavenlyThunderSealCountOnDeath(player);
+        clearForgetfulnessMemory(player);
 
         if (hasNineHeavensPunishment(player)) {
             player.getPersistentData().putBoolean(
@@ -78,6 +92,246 @@ public class ModEvents {
                     true
             );
         }
+
+    }
+    //遗忘鬼
+    private ItemStack getForgetfulnessEquippedStack(Player player) {
+
+        final ItemStack[] found = {ItemStack.EMPTY};
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler("guiqi").ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    ItemStack stack = stacks.getStackInSlot(slot);
+
+                    if (stack.is(ModItems.FORGETFULNESS.get())) {
+                        found[0] = stack;
+                        return;
+                    }
+                }
+            });
+        });
+
+        return found[0];
+    }
+    //遗忘鬼记录伤害
+    private void recordForgetfulnessDamage(Pre event) {
+
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD)) {
+            return;
+        }
+
+        float damage = event.getNewDamage();
+
+        if (damage <= 0.0F) {
+            return;
+        }
+
+        if (player.getHealth() - damage <= 0.0F) {
+            return;
+        }
+
+        ItemStack forgetfulness = getForgetfulnessEquippedStack(player);
+
+        if (forgetfulness.isEmpty()) {
+            return;
+        }
+
+        if (ArtifactDurabilityHelper.isBroken(forgetfulness)) {
+            return;
+        }
+
+        CompoundTag data = player.getPersistentData();
+
+        data.putFloat(
+                ForgetfulnessItem.FORGOTTEN_HEALTH_BEFORE_DAMAGE,
+                player.getHealth()
+        );
+
+        data.putLong(
+                ForgetfulnessItem.FORGOTTEN_HEALTH_RESTORE_TIME,
+                player.level().getGameTime() + ForgetfulnessItem.DAMAGE_RESTORE_DELAY
+        );
+    }
+    //遗忘鬼处理遗忘
+    private void tickForgetfulness(Player player) {
+
+        ItemStack forgetfulness = getForgetfulnessEquippedStack(player);
+
+        if (forgetfulness.isEmpty()) {
+            clearForgetfulnessMemory(player);
+            return;
+        }
+
+        if (ArtifactDurabilityHelper.isBroken(forgetfulness)) {
+            clearForgetfulnessMemory(player);
+            return;
+        }
+
+        restoreForgottenDamage(player, forgetfulness);
+        tickForgetfulnessBuffMemory(player, forgetfulness);
+    }
+    private void restoreForgottenDamage(Player player, ItemStack forgetfulness) {
+
+        CompoundTag data = player.getPersistentData();
+
+        if (!data.contains(ForgetfulnessItem.FORGOTTEN_HEALTH_RESTORE_TIME)) {
+            return;
+        }
+
+        long restoreTime = data.getLong(ForgetfulnessItem.FORGOTTEN_HEALTH_RESTORE_TIME);
+
+        if (player.level().getGameTime() < restoreTime) {
+            return;
+        }
+
+        float rememberedHealth = data.getFloat(
+                ForgetfulnessItem.FORGOTTEN_HEALTH_BEFORE_DAMAGE
+        );
+
+        data.remove(ForgetfulnessItem.FORGOTTEN_HEALTH_RESTORE_TIME);
+        data.remove(ForgetfulnessItem.FORGOTTEN_HEALTH_BEFORE_DAMAGE);
+
+        if (!player.isAlive()) {
+            return;
+        }
+
+        float targetHealth = Math.min(
+                rememberedHealth,
+                player.getMaxHealth()
+        );
+
+        if (targetHealth <= player.getHealth()) {
+            return;
+        }
+
+        player.setHealth(targetHealth);
+
+        ArtifactDurabilityHelper.damageArtifact(
+                forgetfulness,
+                ForgetfulnessItem.DAMAGE_MEMORY_DURABILITY_COST
+        );
+
+        player.displayClientMessage(
+                Component.literal("遗忘：你忘记了刚才的伤痛。"),
+                true
+        );
+    }
+    private void tickForgetfulnessBuffMemory(Player player, ItemStack forgetfulness) {
+
+        CompoundTag data = player.getPersistentData();
+
+        CompoundTag memory = data.getCompound(ForgetfulnessItem.BUFF_MEMORY);
+
+        Set<String> activeKeys = new HashSet<>();
+
+        for (MobEffectInstance effectInstance : new ArrayList<>(player.getActiveEffects())) {
+
+            Holder<MobEffect> effect = effectInstance.getEffect();
+
+            if (!isForgetfulnessBuffSupported(effect, effectInstance)) {
+                continue;
+            }
+
+            ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
+
+            if (effectId == null) {
+                continue;
+            }
+
+            String key = effectId.toString();
+
+            activeKeys.add(key);
+
+            int currentDuration = effectInstance.getDuration();
+            int currentAmplifier = effectInstance.getAmplifier();
+
+            CompoundTag saved = memory.getCompound(key);
+
+            if (!memory.contains(key)
+                    || saved.getInt("amplifier") != currentAmplifier
+                    || currentDuration > saved.getInt("duration")) {
+
+                saved.putInt("duration", currentDuration);
+                saved.putInt("amplifier", currentAmplifier);
+                saved.putBoolean("ambient", effectInstance.isAmbient());
+                saved.putBoolean("visible", effectInstance.isVisible());
+                saved.putBoolean("show_icon", effectInstance.showIcon());
+
+                memory.put(key, saved);
+            }
+
+            int rememberedDuration = memory.getCompound(key).getInt("duration");
+
+            if (currentDuration > ForgetfulnessItem.BUFF_RENEW_THRESHOLD) {
+                continue;
+            }
+
+            player.addEffect(new MobEffectInstance(
+                    effect,
+                    rememberedDuration,
+                    currentAmplifier,
+                    effectInstance.isAmbient(),
+                    effectInstance.isVisible(),
+                    effectInstance.showIcon()
+            ));
+
+            ArtifactDurabilityHelper.damageArtifact(
+                    forgetfulness,
+                    ForgetfulnessItem.BUFF_RENEW_DURABILITY_COST
+            );
+        }
+
+        for (String key : new ArrayList<>(memory.getAllKeys())) {
+            if (!activeKeys.contains(key)) {
+                memory.remove(key);
+            }
+        }
+
+        if (memory.getAllKeys().isEmpty()) {
+            data.remove(ForgetfulnessItem.BUFF_MEMORY);
+        } else {
+            data.put(ForgetfulnessItem.BUFF_MEMORY, memory);
+        }
+    }
+    private boolean isForgetfulnessBuffSupported(
+            Holder<MobEffect> effect,
+            MobEffectInstance effectInstance
+    ) {
+
+        if (effect.value().getCategory() != MobEffectCategory.BENEFICIAL) {
+            return false;
+        }
+
+        if (effect.value().isInstantenous()) {
+            return false;
+        }
+
+        if (effect.value() == MobEffects.ABSORPTION.value()) {
+            return false;
+        }
+
+        return effectInstance.getDuration() > 0;
+    }
+    private void clearForgetfulnessMemory(Player player) {
+
+        CompoundTag data = player.getPersistentData();
+
+        data.remove(ForgetfulnessItem.FORGOTTEN_HEALTH_RESTORE_TIME);
+        data.remove(ForgetfulnessItem.FORGOTTEN_HEALTH_BEFORE_DAMAGE);
+        data.remove(ForgetfulnessItem.BUFF_MEMORY);
     }
     //重新计算天劫的雷次数
     private void resetHeavenlyThunderSealCountOnDeath(Player player) {
@@ -474,11 +728,127 @@ public class ModEvents {
 
         applyHeavenlyThunderSeal(event);
         applySummerFanShield(event);
+        applyJiehuiRingLifeSave(event);
+
         applyHeartDemonMaskBacklash(event);
         applySpringShearsFateCut(event);
         applyHeartDemon(event);
         applySpiritExhaustion(event);
+
+        recordForgetfulnessDamage(event);
     }
+    //劫灰戒
+    private void applyJiehuiRingLifeSave(Pre event) {
+
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        if (player.isCreative() || player.isSpectator()) {
+            return;
+        }
+
+        if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD)) {
+            return;
+        }
+
+        float damage = event.getNewDamage();
+
+        if (damage <= 0.0F) {
+            return;
+        }
+
+        if (player.getHealth() - damage > 0.0F) {
+            return;
+        }
+
+        ItemStack ring = getJiehuiRingEquippedStack(player);
+
+        if (ring.isEmpty()) {
+            return;
+        }
+
+        if (ArtifactDurabilityHelper.isBroken(ring)) {
+            return;
+        }
+
+        if (!JiehuiRingItem.isReady(player)) {
+            return;
+        }
+
+        event.setNewDamage(0.0F);
+
+        player.setHealth(1.0F);
+
+        player.addEffect(new MobEffectInstance(
+                MobEffects.DAMAGE_RESISTANCE,
+                JiehuiRingItem.RESISTANCE_DURATION,
+                2,
+                false,
+                false,
+                true
+        ));
+
+        player.addEffect(new MobEffectInstance(
+                MobEffects.FIRE_RESISTANCE,
+                JiehuiRingItem.FIRE_RESISTANCE_DURATION,
+                0,
+                false,
+                false,
+                true
+        ));
+
+        player.addEffect(new MobEffectInstance(
+                MobEffects.MOVEMENT_SLOWDOWN,
+                JiehuiRingItem.SLOWNESS_DURATION,
+                1,
+                false,
+                false,
+                true
+        ));
+
+        ArtifactDurabilityHelper.damageArtifact(
+                ring,
+                JiehuiRingItem.DURABILITY_COST
+        );
+
+        JiehuiRingItem.startCooldown(player);
+
+        player.displayClientMessage(
+                Component.literal("劫灰戒：灰烬护命，留你一息。"),
+                true
+        );
+    }
+    private ItemStack getJiehuiRingEquippedStack(Player player) {
+
+        final ItemStack[] found = {ItemStack.EMPTY};
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler(IHeavenlyArtifactItem.SLOT_ID).ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    ItemStack stack = stacks.getStackInSlot(slot);
+
+                    if (stack.is(ModItems.JIEHUI_RING.get())) {
+                        found[0] = stack;
+                        return;
+                    }
+                }
+            });
+        });
+
+        return found[0];
+    }
+
+
+
     //夏扇实现
     private void applySummerFanShield(Pre event) {
 
@@ -708,6 +1078,9 @@ public class ModEvents {
         removeLifeExhaustionIfInactive(player);
         removeWindEvilIfInactive(player);
 
+        tickGhostArtifactAutoRepair(player);
+        tickForgetfulness(player);
+
         tickShengZhuangKnockbackResistance(player);
         tickHeavenlyThunderSealStrike(player);
 
@@ -715,6 +1088,71 @@ public class ModEvents {
         tryReverseEarthDisaster(player);
 
         ensureNineHeavensPunishment(player);
+    }
+    //鬼器修复
+    private void tickGhostArtifactAutoRepair(Player player) {
+
+        if (player.level().getGameTime() % IGhostArtifactItem.GHOST_REPAIR_INTERVAL != 0) {
+            return;
+        }
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler(IGhostArtifactItem.SLOT_ID).ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    ItemStack stack = stacks.getStackInSlot(slot);
+
+                    if (!(stack.getItem() instanceof IGhostArtifactItem)) {
+                        continue;
+                    }
+
+                    repairGhostArtifact(player, stack);
+                }
+            });
+        });
+    }
+    private void repairGhostArtifact(Player player, ItemStack stack) {
+
+        if (!ArtifactDurabilityHelper.isDamaged(stack)) {
+            return;
+        }
+
+        if (player.totalExperience >= IGhostArtifactItem.EXPERIENCE_COST_PER_REPAIR) {
+
+            player.giveExperiencePoints(-IGhostArtifactItem.EXPERIENCE_COST_PER_REPAIR);
+
+            ArtifactDurabilityHelper.repairArtifact(
+                    stack,
+                    IGhostArtifactItem.GHOST_REPAIR_AMOUNT
+            );
+
+            return;
+        }
+
+        float health = player.getHealth();
+
+        if (health <= IGhostArtifactItem.MIN_HEALTH_AFTER_REPAIR) {
+            return;
+        }
+
+        float healthCost = Math.min(
+                IGhostArtifactItem.HEALTH_COST_PER_REPAIR,
+                health - IGhostArtifactItem.MIN_HEALTH_AFTER_REPAIR
+        );
+
+        if (healthCost <= 0.0F) {
+            return;
+        }
+
+        player.setHealth(health - healthCost);
+
+        ArtifactDurabilityHelper.repairArtifact(
+                stack,
+                IGhostArtifactItem.GHOST_REPAIR_AMOUNT
+        );
     }
     //天雷效果
     private void applyHeavenlyThunderSeal(Pre event) {

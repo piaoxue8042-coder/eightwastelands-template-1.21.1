@@ -1,17 +1,11 @@
 package com.px8042.eightwastelands.item;
 
 import com.px8042.eightwastelands.eightwastelands;
-import com.px8042.eightwastelands.item.custom.NineHeavensPunishmentItem;
+import com.px8042.eightwastelands.item.custom.*;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import com.px8042.eightwastelands.item.custom.WealthItem;
-import com.px8042.eightwastelands.item.custom.SummerFanItem;
-import com.px8042.eightwastelands.item.custom.SpringShearsItem;
-import com.px8042.eightwastelands.item.custom.HeartDemonMaskItem;
-import com.px8042.eightwastelands.item.custom.GuiyuanBellItem;
-import com.px8042.eightwastelands.item.custom.BloodSkullItem;import com.px8042.eightwastelands.item.custom.ShengZhuangItem;import com.px8042.eightwastelands.item.custom.HeavenlyThunderSealItem;
 
 
 public class ModItems {
@@ -78,6 +72,22 @@ public class ModItems {
             ITEMS.register("heavenly_thunder_seal",
                     () -> new HeavenlyThunderSealItem(
                             new Item.Properties().stacksTo(1)
+                    ));
+    // 遗忘，鬼器
+    public static final DeferredItem<Item> FORGETFULNESS =
+            ITEMS.register("forgetfulness",
+                    () -> new ForgetfulnessItem(
+                            new Item.Properties()
+                                    .stacksTo(1)
+                                    .durability(800)
+                    ));
+    // 劫灰戒，仙器
+    public static final DeferredItem<Item> JIEHUI_RING =
+            ITEMS.register("jiehui_ring",
+                    () -> new JiehuiRingItem(
+                            new Item.Properties()
+                                    .stacksTo(1)
+                                    .durability(500)
                     ));
 
     //此处添加新物品

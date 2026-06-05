@@ -66,5 +66,17 @@
   "tooltip.eightwastelands.heavenly_thunder_seal.effect_4": "雷罚：天劫反转后，每 10 秒对 30 格内的敌人降下一道雷电，造成 100 点雷电伤害。",
   "tooltip.eightwastelands.heavenly_thunder_seal.curse": "灾劫饰品：只能佩戴在灾劫槽位。",
   "curios.identifier.xianqi": "仙器",
-  "curios.identifier.guiqi": "鬼器"
+  "curios.identifier.guiqi": "鬼器",
+  "item.eightwastelands.forgetfulness": "遗忘",
+  "tooltip.eightwastelands.forgetfulness.description": "你忘了疼痛，也忘了时间。",
+  "tooltip.eightwastelands.forgetfulness.effect_1": "忘伤：受到非致死、非虚空伤害后，2 秒后恢复到受伤前生命值。",
+  "tooltip.eightwastelands.forgetfulness.effect_2": "忘效：有益持续效果即将自然结束时，会被遗忘并自动续上。",
+  "tooltip.eightwastelands.forgetfulness.effect_3": "鬼器：耐久耗尽时失效，会自动吞噬经验与生命自我修复。",
+  "tooltip.eightwastelands.forgetfulness.curse": "鬼器饰品：只能佩戴在鬼器槽位。",
+  "item.eightwastelands.jiehui_ring": "劫灰戒",
+  "tooltip.eightwastelands.jiehui_ring.description": "劫火焚尽之后，灰中仍藏一息。",
+  "tooltip.eightwastelands.jiehui_ring.effect_1": "劫灰护命：受到致命伤害时保留 1 点生命。",
+  "tooltip.eightwastelands.jiehui_ring.effect_2": "触发后获得短暂抗性提升、防火与缓慢，并进入 2 分钟冷却。",
+  "tooltip.eightwastelands.jiehui_ring.effect_3": "仙器：耐久耗尽时失效，需要在楼砧上修复。",
+  "tooltip.eightwastelands.jiehui_ring.curse": "仙器饰品：只能佩戴在仙器槽位。"
 }

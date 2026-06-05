@@ -30,6 +30,8 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.BLOOD_SKULL.get());
                                 output.accept(ModItems.SHENG_ZHUANG.get());
                                 output.accept(ModItems.HEAVENLY_THUNDER_SEAL.get());
+                                output.accept(ModItems.FORGETFULNESS.get());
+                                output.accept(ModItems.JIEHUI_RING.get());
 
                                 //此处在创造物品栏里添加物品
                             })
