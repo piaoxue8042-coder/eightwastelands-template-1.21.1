@@ -2,7 +2,6 @@ package com.px8042.eightwastelands.item.custom;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
@@ -43,8 +42,7 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
 
 
 
-    private static final int MINING_FATIGUE_DURATION = 40;
-    private static final int MINING_FATIGUE_AMPLIFIER = 1;
+
 
 
 
@@ -233,7 +231,6 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
             ));
         } else {
             player.removeEffect(ModMobEffects.SPIRIT_EXHAUSTION);
-            player.removeEffect(MobEffects.DIG_SLOWDOWN);
         }
 
         if (!isWitheredBloodReversed(player)) {
@@ -319,9 +316,7 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
         }
 
 
-        if (player.hasEffect(ModMobEffects.SPIRIT_EXHAUSTION)) {
-            tickSpiritExhaustion(player);
-        }
+
 
         if (player.hasEffect(ModMobEffects.LIFE_EXHAUSTION)) {
             tickLifeExhaustion(player);
@@ -458,17 +453,7 @@ public class NineHeavensPunishmentItem extends Item implements ICurioItem {
 
     //tick方法
 
-    private void tickSpiritExhaustion(Player player) {
 
-        player.addEffect(new MobEffectInstance(
-                MobEffects.DIG_SLOWDOWN,
-                MINING_FATIGUE_DURATION,
-                MINING_FATIGUE_AMPLIFIER,
-                false,
-                false,
-                true
-        ));
-    }
     private void tickLifeExhaustion(Player player) {
 
         AttributeInstance maxHealth = player.getAttribute(Attributes.MAX_HEALTH);

@@ -80,6 +80,23 @@ public class ModEvents {
 
 
     //上面是常量
+    //让挖掘疲劳进绝灵里
+    @SubscribeEvent
+    public void onBreakSpeed(PlayerEvent.BreakSpeed event) {
+
+        Player player = event.getEntity();
+
+        if (!player.hasEffect(ModMobEffects.SPIRIT_EXHAUSTION)) {
+            return;
+        }
+
+        if (NineHeavensPunishmentItem.isSpiritExhaustionReversed(player)) {
+            return;
+        }
+
+        event.setNewSpeed(event.getOriginalSpeed() * 0.09F);
+    }
+
     //右键楼砧事件
     @SubscribeEvent
     public void onLouZhenRepair(PlayerInteractEvent.RightClickBlock event) {
