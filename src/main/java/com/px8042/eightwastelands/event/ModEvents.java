@@ -54,6 +54,10 @@ import com.px8042.eightwastelands.item.artifact.IHeavenlyArtifactItem;
 import com.px8042.eightwastelands.block.ModBlocks;
 import com.px8042.eightwastelands.item.artifact.IHeavenlyArtifactItem;
 import com.px8042.eightwastelands.item.artifact.ArtifactDurabilityHelper;
+import com.px8042.eightwastelands.item.custom.FengxingBootsItem;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 import java.util.Comparator;
 
@@ -841,6 +845,170 @@ public class ModEvents {
         applySpiritExhaustion(event);
 
         recordForgetfulnessDamage(event);
+        clearFengxingBootsOnDamage(event);
+    }
+    //风行鞋
+    private void tickFengxingBoots(Player player) {
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        ItemStack boots = getFengxingBootsEquippedStack(player);
+
+        if (boots.isEmpty()) {
+            clearFengxingBoots(player);
+            return;
+        }
+
+        if (ArtifactDurabilityHelper.isBroken(boots)) {
+            clearFengxingBoots(player);
+            return;
+        }
+
+        if (!player.isSprinting()
+                || player.isShiftKeyDown()
+                || !player.onGround()
+                || player.isCreative()
+                || player.isSpectator()) {
+
+            clearFengxingBoots(player);
+            return;
+        }
+
+        CompoundTag data = player.getPersistentData();
+
+        int sprintTicks = data.getInt(FengxingBootsItem.SPRINT_TICKS) + 1;
+
+        data.putInt(FengxingBootsItem.SPRINT_TICKS, sprintTicks);
+
+        int stage = getFengxingBootsStage(sprintTicks);
+
+        applyFengxingBootsSpeed(player, stage);
+
+        if (sprintTicks % FengxingBootsItem.DURABILITY_COST_INTERVAL == 0) {
+
+            ArtifactDurabilityHelper.damageArtifact(
+                    boots,
+                    FengxingBootsItem.DURABILITY_COST
+            );
+
+            if (ArtifactDurabilityHelper.isBroken(boots)) {
+                clearFengxingBoots(player);
+
+                player.displayClientMessage(
+                        Component.literal("风行履：灵纹耗尽，风息已止。"),
+                        true
+                );
+            }
+        }
+    }
+    private ItemStack getFengxingBootsEquippedStack(Player player) {
+
+        final ItemStack[] found = {ItemStack.EMPTY};
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler(IHeavenlyArtifactItem.SLOT_ID).ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    ItemStack stack = stacks.getStackInSlot(slot);
+
+                    if (stack.is(ModItems.FENGXING_BOOTS.get())) {
+                        found[0] = stack;
+                        return;
+                    }
+                }
+            });
+        });
+
+        return found[0];
+    }
+    private int getFengxingBootsStage(int sprintTicks) {
+
+        if (sprintTicks >= FengxingBootsItem.STAGE_3_TICKS) {
+            return 3;
+        }
+
+        if (sprintTicks >= FengxingBootsItem.STAGE_2_TICKS) {
+            return 2;
+        }
+
+        if (sprintTicks >= FengxingBootsItem.STAGE_1_TICKS) {
+            return 1;
+        }
+
+        return 0;
+    }
+    private void applyFengxingBootsSpeed(Player player, int stage) {
+
+        removeFengxingBootsSpeed(player);
+
+        if (stage <= 0) {
+            return;
+        }
+
+        AttributeInstance movementSpeed = player.getAttribute(
+                Attributes.MOVEMENT_SPEED
+        );
+
+        if (movementSpeed == null) {
+            return;
+        }
+
+        double bonus = switch (stage) {
+            case 1 -> FengxingBootsItem.STAGE_1_SPEED_BONUS;
+            case 2 -> FengxingBootsItem.STAGE_2_SPEED_BONUS;
+            case 3 -> FengxingBootsItem.STAGE_3_SPEED_BONUS;
+            default -> 0.0D;
+        };
+
+        if (bonus <= 0.0D) {
+            return;
+        }
+
+        movementSpeed.addTransientModifier(new AttributeModifier(
+                FengxingBootsItem.SPEED_MODIFIER_ID,
+                bonus,
+                AttributeModifier.Operation.ADD_VALUE
+        ));
+    }
+    private void removeFengxingBootsSpeed(Player player) {
+
+        AttributeInstance movementSpeed = player.getAttribute(
+                Attributes.MOVEMENT_SPEED
+        );
+
+        if (movementSpeed == null) {
+            return;
+        }
+
+        if (movementSpeed.getModifier(FengxingBootsItem.SPEED_MODIFIER_ID) != null) {
+            movementSpeed.removeModifier(FengxingBootsItem.SPEED_MODIFIER_ID);
+        }
+    }
+    private void clearFengxingBoots(Player player) {
+
+        player.getPersistentData().remove(FengxingBootsItem.SPRINT_TICKS);
+        removeFengxingBootsSpeed(player);
+    }
+    private void clearFengxingBootsOnDamage(Pre event) {
+
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        if (event.getNewDamage() <= 0.0F) {
+            return;
+        }
+
+        clearFengxingBoots(player);
     }
     //劫灰戒
     private void applyJiehuiRingLifeSave(Pre event) {
@@ -1185,6 +1353,7 @@ public class ModEvents {
 
         tickGhostArtifactAutoRepair(player);
         tickForgetfulness(player);
+        tickFengxingBoots(player);
 
         tickShengZhuangKnockbackResistance(player);
         tickHeavenlyThunderSealStrike(player);

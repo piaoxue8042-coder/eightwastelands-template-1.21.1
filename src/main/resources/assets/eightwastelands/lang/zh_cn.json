@@ -79,5 +79,11 @@
   "tooltip.eightwastelands.jiehui_ring.effect_2": "触发后获得短暂抗性提升、防火与缓慢，并进入 2 分钟冷却。",
   "tooltip.eightwastelands.jiehui_ring.effect_3": "仙器：耐久耗尽时失效，需要在楼砧上修复。",
   "tooltip.eightwastelands.jiehui_ring.curse": "仙器饰品：只能佩戴在仙器槽位。",
-  "block.eightwastelands.lou_zhen": "楼砧"
+  "block.eightwastelands.lou_zhen": "楼砧",
+  "item.eightwastelands.fengxing_boots": "风行履",
+  "tooltip.eightwastelands.fengxing_boots.description": "踏风而行，身轻如羽。",
+  "tooltip.eightwastelands.fengxing_boots.effect_1": "风行：疾跑时逐渐获得移动速度加成。",
+  "tooltip.eightwastelands.fengxing_boots.effect_2": "停止疾跑、潜行、离地或受到伤害时，风行层数清零。",
+  "tooltip.eightwastelands.fengxing_boots.effect_3": "仙器：疾跑时持续消耗耐久，耐久耗尽时失效。",
+  "tooltip.eightwastelands.fengxing_boots.curse": "仙器饰品：只能佩戴在仙器槽位。"
 }

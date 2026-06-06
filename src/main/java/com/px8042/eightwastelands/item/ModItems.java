@@ -103,6 +103,14 @@ public class ModItems {
                             ModBlocks.LOU_ZHEN.get(),
                             new Item.Properties()
                     ));
+    // 风行履，仙器
+    public static final DeferredItem<Item> FENGXING_BOOTS =
+            ITEMS.register("fengxing_boots",
+                    () -> new FengxingBootsItem(
+                            new Item.Properties()
+                                    .stacksTo(1)
+                                    .durability(600)
+                    ));
 
     //此处添加新物品
 }
