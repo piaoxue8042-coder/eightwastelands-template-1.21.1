@@ -85,5 +85,11 @@
   "tooltip.eightwastelands.fengxing_boots.effect_1": "风行：疾跑时逐渐获得移动速度加成。",
   "tooltip.eightwastelands.fengxing_boots.effect_2": "停止疾跑、潜行、离地或受到伤害时，风行层数清零。",
   "tooltip.eightwastelands.fengxing_boots.effect_3": "仙器：疾跑时持续消耗耐久，耐久耗尽时失效。",
-  "tooltip.eightwastelands.fengxing_boots.curse": "仙器饰品：只能佩戴在仙器槽位。"
+  "tooltip.eightwastelands.fengxing_boots.curse": "仙器饰品：只能佩戴在仙器槽位。",
+  "item.eightwastelands.bihuo_pearl": "避火珠",
+  "tooltip.eightwastelands.bihuo_pearl.description": "珠中藏炎，火不能侵。",
+  "tooltip.eightwastelands.bihuo_pearl.effect_1": "避火：佩戴时免疫火焰、岩浆与燃烧伤害。",
+  "tooltip.eightwastelands.bihuo_pearl.effect_2": "寒侵：受到冰冻伤害时，伤害提高。",
+  "tooltip.eightwastelands.bihuo_pearl.effect_3": "仙器：抵消火焰伤害时消耗耐久，耐久耗尽时失效。",
+  "tooltip.eightwastelands.bihuo_pearl.curse": "仙器饰品：只能佩戴在仙器槽位。"
 }

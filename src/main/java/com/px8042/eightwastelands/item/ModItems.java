@@ -111,6 +111,14 @@ public class ModItems {
                                     .stacksTo(1)
                                     .durability(600)
                     ));
+    // 避火珠，仙器
+    public static final DeferredItem<Item> BIHUO_PEARL =
+            ITEMS.register("bihuo_pearl",
+                    () -> new BihuoPearlItem(
+                            new Item.Properties()
+                                    .stacksTo(1)
+                                    .durability(400)
+                    ));
 
     //此处添加新物品
 }

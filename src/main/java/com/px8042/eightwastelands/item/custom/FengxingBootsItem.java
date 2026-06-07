@@ -11,10 +11,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurioItem;
+import com.px8042.eightwastelands.item.artifact.AbstractHeavenlyArtifactItem;
 
 import java.util.List;
+import java.util.Properties;
 
-public class FengxingBootsItem extends Item implements ICurioItem, IHeavenlyArtifactItem {
+public class FengxingBootsItem extends AbstractHeavenlyArtifactItem {
 
     public static final String SPRINT_TICKS =
             "eightwastelands_fengxing_boots_sprint_ticks";
@@ -40,15 +42,12 @@ public class FengxingBootsItem extends Item implements ICurioItem, IHeavenlyArti
         super(properties);
     }
 
-    @Override
-    public boolean canEquip(SlotContext slotContext, ItemStack stack) {
-        return slotContext.identifier().equals(IHeavenlyArtifactItem.SLOT_ID);
-    }
+
 
     @Override
     public void appendHoverText(
             ItemStack stack,
-            TooltipContext context,
+            Item.TooltipContext context,
             List<Component> tooltipComponents,
             TooltipFlag tooltipFlag
     ) {

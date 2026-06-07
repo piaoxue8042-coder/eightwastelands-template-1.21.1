@@ -9,10 +9,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurioItem;
+import com.px8042.eightwastelands.item.artifact.AbstractHeavenlyArtifactItem;
 
 import java.util.List;
 
-public class JiehuiRingItem extends Item implements ICurioItem, IHeavenlyArtifactItem {
+public class JiehuiRingItem extends AbstractHeavenlyArtifactItem {
 
     public static final String COOLDOWN_END_TIME =
             "eightwastelands_jiehui_ring_cooldown_end_time";
@@ -31,10 +32,7 @@ public class JiehuiRingItem extends Item implements ICurioItem, IHeavenlyArtifac
         super(properties);
     }
 
-    @Override
-    public boolean canEquip(SlotContext slotContext, ItemStack stack) {
-        return slotContext.identifier().equals(IHeavenlyArtifactItem.SLOT_ID);
-    }
+
 
     public static boolean isReady(Player player) {
         long cooldownEndTime = player.getPersistentData().getLong(COOLDOWN_END_TIME);

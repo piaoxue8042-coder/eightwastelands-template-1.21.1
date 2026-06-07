@@ -9,10 +9,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurioItem;
+import com.px8042.eightwastelands.item.artifact.AbstractGhostArtifactItem;
 
 import java.util.List;
 
-public class ForgetfulnessItem extends Item implements ICurioItem, IGhostArtifactItem {
+public class ForgetfulnessItem extends AbstractGhostArtifactItem {
 
     public static final String FORGOTTEN_HEALTH_RESTORE_TIME =
             "eightwastelands_forgetfulness_restore_time";

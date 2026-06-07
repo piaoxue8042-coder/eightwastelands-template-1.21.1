@@ -58,6 +58,8 @@ import com.px8042.eightwastelands.item.custom.FengxingBootsItem;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import com.px8042.eightwastelands.item.custom.BihuoPearlItem;
+import net.minecraft.tags.DamageTypeTags;
 
 import java.util.Comparator;
 
@@ -852,6 +854,8 @@ public class ModEvents {
     @SubscribeEvent
     public void onLivingDamage(Pre event) {
 
+        applyBihuoPearl(event);
+
         applyHeavenlyThunderSeal(event);
         applySummerFanShield(event);
         applyJiehuiRingLifeSave(event);
@@ -864,6 +868,81 @@ public class ModEvents {
         recordForgetfulnessDamage(event);
         clearFengxingBootsOnDamage(event);
     }
+    //避火珠
+    private void applyBihuoPearl(Pre event) {
+
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        ItemStack pearl = getBihuoPearlEquippedStack(player);
+
+        if (pearl.isEmpty()) {
+            return;
+        }
+
+        if (ArtifactDurabilityHelper.isBroken(pearl)) {
+            return;
+        }
+
+        if (event.getSource().is(DamageTypeTags.IS_FIRE)) {
+
+            if (event.getNewDamage() <= 0.0F) {
+                return;
+            }
+
+            event.setNewDamage(0.0F);
+            player.clearFire();
+
+            ArtifactDurabilityHelper.damageArtifact(
+                    pearl,
+                    BihuoPearlItem.FIRE_BLOCK_DURABILITY_COST
+            );
+
+            if (ArtifactDurabilityHelper.isBroken(pearl)) {
+                player.displayClientMessage(
+                        Component.literal("避火珠：珠光黯淡，避火之力已尽。"),
+                        true
+                );
+            }
+
+            return;
+        }
+
+        if (event.getSource().is(DamageTypes.FREEZE)) {
+            event.setNewDamage(
+                    event.getNewDamage() * BihuoPearlItem.FREEZE_DAMAGE_MULTIPLIER
+            );
+        }
+    }
+    private ItemStack getBihuoPearlEquippedStack(Player player) {
+
+        final ItemStack[] found = {ItemStack.EMPTY};
+
+        CuriosApi.getCuriosInventory(player).ifPresent(curiosInventory -> {
+            curiosInventory.getStacksHandler(IHeavenlyArtifactItem.SLOT_ID).ifPresent(stacksHandler -> {
+
+                var stacks = stacksHandler.getStacks();
+
+                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+
+                    ItemStack stack = stacks.getStackInSlot(slot);
+
+                    if (stack.is(ModItems.BIHUO_PEARL.get())) {
+                        found[0] = stack;
+                        return;
+                    }
+                }
+            });
+        });
+
+        return found[0];
+    }
+
     //风行鞋
     private void tickFengxingBoots(Player player) {
 

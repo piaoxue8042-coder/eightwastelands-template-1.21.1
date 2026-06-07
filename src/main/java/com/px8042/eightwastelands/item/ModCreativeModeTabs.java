@@ -34,6 +34,7 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.JIEHUI_RING.get());
                                 output.accept(ModItems.LOU_ZHEN.get());
                                 output.accept(ModItems.FENGXING_BOOTS.get());
+                                output.accept(ModItems.BIHUO_PEARL.get());
 
                                 //此处在创造物品栏里添加物品
                             })
